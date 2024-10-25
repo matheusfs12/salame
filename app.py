@@ -24,7 +24,21 @@ def process_file(uploaded_file):
     # Agrupa pelos valores de Medida2 e Cor, e conta as ocorrências
     grouped_df = df.groupby(['Medida2', 'Cor']).size().reset_index(name='Quantidade')
 
-    return grouped_df
+    # Cria uma tabela dinâmica com Medida2 como linhas e Cor como colunas
+    pivot_df = grouped_df.pivot_table(index='Medida2', columns='Cor', values='Quantidade', aggfunc='sum', fill_value=0)
+
+    # Adiciona uma coluna 'Total' que soma as quantidades por linha (Medida2)
+    pivot_df['Total'] = pivot_df.sum(axis=1)
+
+    # Adiciona uma linha 'Total' que soma as quantidades por coluna (Cor)
+    total_row = pd.DataFrame(pivot_df.sum(axis=0)).T
+    total_row.index = ['Total']
+    pivot_df = pd.concat([pivot_df, total_row])
+
+    # Reseta o índice para que 'Medida2' seja uma coluna
+    pivot_df = pivot_df.reset_index()
+
+    return pivot_df
 
 def main():
     st.title("Processador de Arquivos Excel")
